@@ -1,30 +1,47 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"os"
-	"strconv"
-
-	"github.com/adamyy/hackernews/api"
-	"github.com/adamyy/hackernews/feed"
-	"github.com/adamyy/hackernews/view"
+	"os/user"
+	"path"
 )
 
-func main() {
-	f, err := strconv.Atoi(os.Args[1])
-	if err != nil {
-		panic(err)
+func baseDir() (string, error) {
+	usr, _ := user.Current()
+	dir := path.Join(usr.HomeDir, ".termhn")
+	if _, err := os.Stat(dir); err != nil {
+		if os.IsNotExist(err) {
+			if mkdirErr := os.Mkdir(dir, 0700); mkdirErr != nil {
+				return "", mkdirErr
+			}
+		} else {
+			return "", err
+		}
 	}
-	p, err := strconv.Atoi(os.Args[2])
-	if err != nil {
-		panic(err)
-	}
+	return dir, nil
+}
 
-	ft := feed.Type(f)
-	items, err := api.GetFeeds(ft, p)
+func main() {
+	dir, err := baseDir()
 	if err != nil {
-		panic(err)
+		log.Fatalf("Could not setup directory: %v", err)
 	}
-	fv := view.NewFeedView(ft, items, p)
-	fmt.Println(fv.Render())
+	logfile := path.Join(dir, "hackernews.log")
+	f, err := os.OpenFile(logfile, os.O_CREATE|os.O_RDWR|os.O_APPEND|os.O_TRUNC, 0666)
+	if err != nil {
+		log.Fatalf("error opening file: %v", err)
+	}
+	defer f.Close()
+	log.SetOutput(f)
+
+	app, err := NewApp()
+	if err != nil {
+		log.Panicln(err)
+	}
+	defer app.Close()
+
+	if err := app.Init(); err != nil {
+		log.Println(err)
+	}
 }
