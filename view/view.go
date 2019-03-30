@@ -6,7 +6,7 @@
 package view
 
 import (
-	"github.com/adamyy/hackernews/view/style"
+	"github.com/adamyy/wackernews/view/style"
 	"github.com/jroimartin/gocui"
 )
 

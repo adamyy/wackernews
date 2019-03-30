@@ -1,4 +1,4 @@
-BINARY_NAME=hackernews
+BINARY_NAME=wackernews
 
 all: build test
 

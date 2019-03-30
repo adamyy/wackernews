@@ -6,7 +6,7 @@ import (
 	"os/user"
 	"path"
 
-	"github.com/adamyy/hackernews/app"
+	"github.com/adamyy/wackernews/app"
 )
 
 func baseDir() (string, error) {
@@ -29,7 +29,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Could not setup directory: %v", err)
 	}
-	logfile := path.Join(dir, "hackernews.log")
+	logfile := path.Join(dir, "wackernews.log")
 	f, err := os.OpenFile(logfile, os.O_CREATE|os.O_RDWR|os.O_APPEND|os.O_TRUNC, 0666)
 	if err != nil {
 		log.Fatalf("error opening file: %v", err)

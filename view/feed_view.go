@@ -6,7 +6,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/adamyy/hackernews/news"
+	"github.com/adamyy/wackernews/news"
 	"github.com/jroimartin/gocui"
 )
 

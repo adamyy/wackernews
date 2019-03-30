@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/adamyy/hackernews/view/text"
+	"github.com/adamyy/wackernews/view/text"
 
-	"github.com/adamyy/hackernews/news"
-	"github.com/adamyy/hackernews/view"
+	"github.com/adamyy/wackernews/news"
+	"github.com/adamyy/wackernews/view"
 	"github.com/jroimartin/gocui"
 )
 

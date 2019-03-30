@@ -3,8 +3,8 @@ package app
 import (
 	"log"
 
-	"github.com/adamyy/hackernews/controller"
-	"github.com/adamyy/hackernews/news"
+	"github.com/adamyy/wackernews/controller"
+	"github.com/adamyy/wackernews/news"
 	"github.com/jroimartin/gocui"
 )
 

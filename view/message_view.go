@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/adamyy/hackernews/view/text"
+	"github.com/adamyy/wackernews/view/text"
 	"github.com/jroimartin/gocui"
 )
 

@@ -8,8 +8,8 @@ import (
 
 	"golang.org/x/net/html"
 
-	"github.com/adamyy/hackernews/news"
-	"github.com/adamyy/hackernews/view/text"
+	"github.com/adamyy/wackernews/news"
+	"github.com/adamyy/wackernews/view/text"
 	"github.com/jroimartin/gocui"
 )
 
