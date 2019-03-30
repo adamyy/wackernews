@@ -5,6 +5,8 @@ import (
 	"os"
 	"os/user"
 	"path"
+
+	"github.com/adamyy/hackernews/app"
 )
 
 func baseDir() (string, error) {
@@ -35,13 +37,13 @@ func main() {
 	defer f.Close()
 	log.SetOutput(f)
 
-	app, err := NewApp()
+	a, err := app.NewApp()
 	if err != nil {
 		log.Panicln(err)
 	}
-	defer app.Close()
+	defer a.Close()
 
-	if err := app.Init(); err != nil {
+	if err := a.Init(); err != nil {
 		log.Println(err)
 	}
 }

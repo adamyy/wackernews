@@ -46,7 +46,7 @@ func (fv *FeedView) Draw(v *gocui.View) error {
 	v.Highlight = true
 	v.SelBgColor = gocui.ColorBlack
 
-	lines := fv.Render()
+	lines := fv.render()
 	_, err := fmt.Fprintf(v, strings.Join(lines, "\n"))
 
 	return err
@@ -95,17 +95,12 @@ func (fv *FeedView) KeyBindings() KeyBindings {
 		return nil
 	}
 
-	onKeyEnter := func(g *gocui.Gui, gv *gocui.View) error {
-		return nil
-	}
-
 	return KeyBindings{
 		gocui.ModNone: {
 			gocui.KeyArrowUp:    onKeyArrowUp,
 			gocui.KeyArrowDown:  onKeyArrowDown,
 			gocui.KeyArrowLeft:  onKeyArrowLeft,
 			gocui.KeyArrowRight: onKeyArrowRight,
-			gocui.KeyEnter:      onKeyEnter,
 		},
 	}
 }
@@ -119,27 +114,26 @@ func (fv *FeedView) SelectedItem() *news.Item {
 
 // rank    	title (url)
 //			points by author time-ago | comments
-func (fv *FeedView) Render() []string {
+func (fv *FeedView) render() []string {
 	feed := fv.feed
-	lines := make([]string, len(feed.Items))
+	var lines []string
 	maxRank := feed.Page * len(feed.Items)
 	indent := strings.Repeat(" ", len(strconv.Itoa(maxRank))+3)
-	s := fv.theme
 	for index, item := range feed.Items {
 		rankStr := strconv.Itoa(index + 1)
 
-		rank := s.RankStyle.Style(fmt.Sprintf("[%s]%s", rankStr, indent[len(rankStr)+3:]))
-		title := s.TitleStyle.Style(item.Title)
-		url := s.UrlStyle.Style(item.Url)
-		points := s.PointsStyle.Style(strconv.Itoa(item.Points))
-		author := s.AuthorStyle.Style(item.User)
-		timeAgo := s.TimeAgoStyle.Style(item.TimeAgo)
-		comments := s.CommentsStyle.Style(strconv.Itoa(item.CommentsCount))
+		rank := fv.StyleRank(fmt.Sprintf("[%s]%s", rankStr, indent[len(rankStr)+3:]))
+		title := fv.StyleTitle(item.Title)
+		url := fv.StyleUrl(item.Url)
+		points := fv.StylePoints(strconv.Itoa(item.Points))
+		author := fv.StyleAuthor(item.User)
+		timeAgo := fv.StyleTimeAgo(item.TimeAgo)
+		comments := fv.StyleComments(strconv.Itoa(item.CommentsCount))
 
 		firstLine := fmt.Sprintf("%s %s (%s)", rank, title, url)
 		secondLine := fmt.Sprintf("%s%s points by %s %s| %s comments", indent, points, author, timeAgo, comments)
 
-		lines[index] = firstLine + "\n" + secondLine
+		lines = append(lines, firstLine, secondLine)
 	}
 	return lines
 }

@@ -40,7 +40,7 @@ func (dv *DetailView) Draw(v *gocui.View) error {
 
 	v.Clear()
 	v.Frame = true
-	v.Title = dv.Name()
+	v.Title = dv.detail.Title
 
 	for _, line := range dv.render() {
 		if _, err := fmt.Fprintln(v, line); err != nil {
@@ -106,14 +106,13 @@ func (dv *DetailView) render() []string {
 // points by author time-ago | comments
 func (dv *DetailView) renderHeader() []string {
 	d := dv.detail
-	s := dv.theme
 
-	title := s.TitleStyle.Style(d.Title)
-	url := s.UrlStyle.Style(d.Url)
-	points := s.PointsStyle.Style(strconv.Itoa(d.Points))
-	author := s.AuthorStyle.Style(d.User)
-	timeAgo := s.TimeAgoStyle.Style(d.TimeAgo)
-	comments := s.CommentsStyle.Style(strconv.Itoa(d.CommentsCount))
+	title := dv.StyleTitle(d.Title)
+	url := dv.StyleUrl(d.Url)
+	points := dv.StylePoints(strconv.Itoa(d.Points))
+	author := dv.StyleAuthor(d.User)
+	timeAgo := dv.StyleTimeAgo(d.TimeAgo)
+	comments := dv.StyleComments(strconv.Itoa(d.CommentsCount))
 
 	return []string{
 		fmt.Sprintf("%s (%s)", title, url),
@@ -124,7 +123,7 @@ func (dv *DetailView) renderHeader() []string {
 func (dv *DetailView) renderContent() []string {
 	d := dv.detail
 	width, _ := dv.Size()
-	return text.Justify(d.Content, width-1, false)
+	return dv.formatContent(d.Content, width-1)
 }
 
 func (dv *DetailView) renderComments() []string {
@@ -143,28 +142,38 @@ func (dv *DetailView) renderComment(comment *news.Detail) []string {
 	if comment.Dead || comment.Deleted {
 		return nil
 	}
-	s := dv.theme
 	indent := strings.Repeat("\t\t\t", comment.Level)
 	width, _ := dv.Size()
-	renderWidth := width - 1 - len(indent)
+	renderWidth := width - 2 - len(indent)
 
 	var lines []string
-	user := s.AuthorStyle.Style(comment.User)
-	timeAgo := s.TimeAgoStyle.Style(comment.TimeAgo)
+	user := dv.StyleAuthor(comment.User)
+	timeAgo := dv.StyleTimeAgo(comment.TimeAgo)
 	header := fmt.Sprintf("%s▲ %s %s", indent, user, timeAgo)
 	lines = append(lines, header)
 
-	commentLines := strings.Split(html.UnescapeString(comment.Content), "<p>")
-	for _, commentLine := range commentLines {
-		justified := text.Justify(commentLine, renderWidth, false)
-		for _, justifiedLine := range justified {
-			lines = append(lines, indent+justifiedLine)
-		}
+	content := dv.formatContent(comment.Content, renderWidth)
+	for _, line := range content {
+		lines = append(lines, indent+"\t\t"+line)
 	}
 
 	for _, subComment := range comment.Comments {
 		rendered := dv.renderComment(subComment)
 		lines = append(lines, rendered...)
 	}
+	return lines
+}
+
+func (dv *DetailView) formatContent(content string, width int) []string {
+	var lines []string
+	unescaped := html.UnescapeString(content)
+	split := strings.Split(unescaped, "<p>")
+
+	for _, l := range split {
+		rendered := text.RenderTag(l)
+		justified := text.Justify(rendered, width, false)
+		lines = append(lines, justified...)
+	}
+
 	return lines
 }

@@ -17,10 +17,10 @@ type View interface {
 }
 
 type Prop struct {
-	*dimension
+	name string
 
-	name  string
-	theme *style.Theme
+	*dimension
+	*style.Theme
 }
 
 type point struct {
@@ -49,7 +49,7 @@ func (p *Prop) SetProp(opts ...PropOption) error {
 	return nil
 }
 
-func Dimension(startX, endX, startY, endY int) PropOption {
+func Dimension(startX, startY, endX, endY int) PropOption {
 	return func(prop *Prop) error {
 		prop.dimension = &dimension{
 			start: &point{x: startX, y: startY},
@@ -61,7 +61,7 @@ func Dimension(startX, endX, startY, endY int) PropOption {
 
 func Theme(theme *style.Theme) PropOption {
 	return func(prop *Prop) error {
-		prop.theme = theme
+		prop.Theme = theme
 		return nil
 	}
 }

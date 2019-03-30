@@ -11,11 +11,6 @@ import (
 	"github.com/jroimartin/gocui"
 )
 
-type feedResponse struct {
-	feed *news.Feed
-	err  error
-}
-
 type FeedController struct {
 	kind news.FeedKind
 	page int
@@ -23,47 +18,28 @@ type FeedController struct {
 	feedView    *view.FeedView
 	messageView *view.MessageView
 
-	reqResult chan *feedResponse
-	reqCancel context.CancelFunc
+	nav Navigator
 }
 
-func NewFeedController(kind news.FeedKind, page int) (*FeedController, error) {
-	client, err := news.NewClient()
-	if err != nil {
-		return nil, err
-	}
-
-	ctx, cancel := context.WithCancel(context.Background())
-
+func NewFeedController(nav Navigator, kind news.FeedKind, page int) *FeedController {
 	c := &FeedController{
-		kind:      kind,
-		page:      page,
-		reqCancel: cancel,
-		reqResult: make(chan *feedResponse),
-		messageView: view.NewMessageView(
-			view.Name(fmt.Sprintf("FeedController@%d/%d:MessageView", kind, page)),
-		),
+		kind: kind,
+		page: page,
+		nav:  nav,
 		feedView: view.NewFeedView(
 			view.Name(fmt.Sprintf("FeedController@%d/%d:FeedView", kind, page)),
 		),
+		messageView: view.NewMessageView(
+			view.Name(fmt.Sprintf("FeedController@%d/%d:MessageView", kind, page)),
+		),
 	}
-
-	go func() {
-		feed, err := client.GetFeed(ctx, kind, page)
-		c.reqResult <- &feedResponse{feed: feed, err: err}
-	}()
-
-	return c, nil
+	return c
 }
 
 func (fc *FeedController) Layout(g *gocui.Gui) error {
 	termX, termY := g.Size()
 	startX, startY := 0, 0
 	endX, endY := termX-1, termY-1
-
-	if err := view.BindGlobalKeys(g); err != nil {
-		return err
-	}
 
 	{ // setup feed view
 		fv := fc.feedView
@@ -104,38 +80,92 @@ func (fc *FeedController) Layout(g *gocui.Gui) error {
 	return nil
 }
 
+type feedResponse struct {
+	feed *news.Feed
+	err  error
+}
+
 func (fc *FeedController) Focus(g *gocui.Gui) error {
 	ticker := time.NewTicker(time.Second / 5)
 	nextLoadingText := text.LoadingText()
 
-	for {
-		select {
-		case r, ok := <-fc.reqResult:
-			if ok {
-				g.Update(func(g *gocui.Gui) error {
-					if r.err != nil {
-						fc.messageView.SetMessage(r.err.Error())
-					} else {
-						fc.feedView.SetFeed(r.feed)
-						if _, err := g.SetCurrentView(fc.feedView.Name()); err != nil {
-							return err
+	if err := fc.BindKeys(g); err != nil {
+		return err
+	}
+
+	client, err := news.NewClient()
+	if err != nil {
+		return err
+	}
+	ctx, _ := context.WithCancel(context.Background()) // TODO cancel
+
+	result := make(chan *feedResponse)
+
+	go func() {
+		feed, err := client.GetFeed(ctx, fc.kind, fc.page)
+		result <- &feedResponse{feed: feed, err: err}
+	}()
+
+	go func() {
+		for {
+			select {
+			case r, ok := <-result:
+				if ok {
+					g.Update(func(g *gocui.Gui) error {
+						if r.err != nil {
+							fc.messageView.SetMessage(r.err.Error())
+						} else {
+							fc.feedView.SetFeed(r.feed)
+							if _, err := g.SetCurrentView(fc.feedView.Name()); err != nil {
+								return err
+							}
 						}
-					}
+						return nil
+					})
+				}
+				ticker.Stop()
+			case <-ticker.C:
+				g.Update(func(g *gocui.Gui) error {
+					fc.messageView.SetMessage(nextLoadingText())
 					return nil
 				})
 			}
-			return nil
-		case <-ticker.C:
-			g.Update(func(g *gocui.Gui) error {
-				fc.messageView.SetMessage(nextLoadingText())
-				return nil
-			})
 		}
-	}
+	}()
+
+	return nil
 }
 
 func (fc *FeedController) UnFocus(g *gocui.Gui) error {
-	close(fc.reqResult)
-	fc.reqCancel()
+	return nil
+}
+
+func (fc *FeedController) BindKeys(g *gocui.Gui) error {
+	if err := view.BindGlobalKeys(g); err != nil {
+		return err
+	}
+
+	onKeyEnter := func(g *gocui.Gui, gv *gocui.View) error {
+		item := fc.feedView.SelectedItem()
+		fc.messageView.SetMessage(item.Title)
+		dc := NewDetailController(fc.nav, item.Id)
+		fc.nav.Push(dc)
+		return nil
+	}
+
+	if err := g.SetKeybinding("", gocui.KeyEnter, gocui.ModNone, onKeyEnter); err != nil {
+		return err
+	}
+
+	onKeyTab := func(g *gocui.Gui, gv *gocui.View) error {
+		c := NewFeedController(fc.nav, fc.kind, fc.page+1)
+		fc.nav.Push(c)
+		return nil
+	}
+
+	if err := g.SetKeybinding("", gocui.KeyTab, gocui.ModNone, onKeyTab); err != nil {
+		return err
+	}
+
 	return nil
 }

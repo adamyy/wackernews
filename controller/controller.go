@@ -15,3 +15,8 @@ type Controller interface {
 	Focus(gui *gocui.Gui) error
 	UnFocus(gui *gocui.Gui) error
 }
+
+type Navigator interface {
+	Push(con Controller)
+	Pop()
+}
