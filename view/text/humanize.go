@@ -22,7 +22,7 @@ var (
 // this function assumes that the input string is well-formed
 // i.e., the start tags and end tags are balanced
 // therefore, it interprets inputs such as "<i>italic<b>bold</i></b>" as "<i>italic<b>bold</b></i>"
-func RenderTag(htmlString string) string {
+func Humanize(htmlString string) string {
 	tz := html.NewTokenizer(strings.NewReader(htmlString))
 	var builder strings.Builder
 	var attrs []color.Attribute

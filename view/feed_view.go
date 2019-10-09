@@ -21,9 +21,8 @@ type FeedView struct {
 }
 
 func NewFeedView(opts ...PropOption) *FeedView {
-	v := &FeedView{Prop: &Prop{}}
-	_ = v.SetProp(DefaultPropOptions...)
-	_ = v.SetProp(opts...) // TODO refactor
+	v := &FeedView{Prop: DefaultProp()}
+	_ = v.Set(opts...)
 	return v
 }
 
@@ -115,12 +114,14 @@ func (fv *FeedView) SelectedItem() *news.Item {
 // rank    	title (url)
 //			points by author time-ago | comments
 func (fv *FeedView) render() []string {
-	feed := fv.feed
 	var lines []string
+
+	feed := fv.feed
 	maxRank := feed.Page * len(feed.Items)
 	indent := strings.Repeat(" ", len(strconv.Itoa(maxRank))+3)
+
 	for index, item := range feed.Items {
-		rankStr := strconv.Itoa(index + 1)
+		rankStr := strconv.Itoa((feed.Page-1)*len(feed.Items) + index + 1)
 
 		rank := fv.StyleRank(fmt.Sprintf("[%s]%s", rankStr, indent[len(rankStr)+3:]))
 		title := fv.StyleTitle(item.Title)

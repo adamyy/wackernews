@@ -12,11 +12,11 @@ import "github.com/jroimartin/gocui"
 
 type Controller interface {
 	gocui.Manager
-	Focus(gui *gocui.Gui) error
-	UnFocus(gui *gocui.Gui) error
+	Focus(g *gocui.Gui) error
+	UnFocus(g *gocui.Gui) error
 }
 
 type Navigator interface {
-	Push(con Controller)
+	Push(c Controller)
 	Pop()
 }

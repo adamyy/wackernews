@@ -23,9 +23,8 @@ type DetailView struct {
 }
 
 func NewDetailView(opts ...PropOption) *DetailView {
-	v := &DetailView{Prop: &Prop{}}
-	_ = v.SetProp(DefaultPropOptions...)
-	_ = v.SetProp(opts...) // TODO refactor
+	v := &DetailView{Prop: DefaultProp()}
+	_ = v.Set(opts...)
 	return v
 }
 
@@ -170,8 +169,8 @@ func (dv *DetailView) formatContent(content string, width int) []string {
 	split := strings.Split(unescaped, "<p>")
 
 	for _, l := range split {
-		rendered := text.RenderTag(l)
-		justified := text.Justify(rendered, width, false)
+		humanized := text.Humanize(l)
+		justified := text.Justify(humanized, width, false)
 		lines = append(lines, justified...)
 	}
 

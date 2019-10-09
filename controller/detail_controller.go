@@ -43,7 +43,7 @@ func (dc *DetailController) Layout(g *gocui.Gui) error {
 
 	{ // setup detail view
 		dv := dc.detailView
-		_ = dv.SetProp(view.Dimension(startX, startY, endX, endY))
+		_ = dv.Set(view.Dimension(startX, startY, endX, endY))
 		v, err := g.SetView(dv.Name(), startX, startY, endX, endY)
 		viewCreated := err == gocui.ErrUnknownView
 		if err != nil && err != gocui.ErrUnknownView {

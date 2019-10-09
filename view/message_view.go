@@ -18,9 +18,8 @@ type MessageView struct {
 }
 
 func NewMessageView(opts ...PropOption) *MessageView {
-	v := &MessageView{Prop: &Prop{}}
-	_ = v.SetProp(DefaultPropOptions...)
-	_ = v.SetProp(opts...) // TODO refactor
+	v := &MessageView{Prop: DefaultProp()}
+	_ = v.Set(opts...)
 	return v
 }
 

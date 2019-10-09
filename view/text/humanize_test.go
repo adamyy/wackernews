@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRenderTag(t *testing.T) {
+func TestHumanize(t *testing.T) {
 	tests := []struct {
 		input  string
 		output string
@@ -18,6 +18,6 @@ func TestRenderTag(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		assert.Equal(t, test.output, RenderTag(test.input))
+		assert.Equal(t, test.output, Humanize(test.input))
 	}
 }
